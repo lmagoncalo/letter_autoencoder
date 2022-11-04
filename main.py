@@ -18,9 +18,9 @@ latent_dim = 64
 batch_size = 256
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 learning_rate = 1e-3
-n_epochs = 10
+n_epochs = 50
 # kl_weight = 0.5
-kl_weight = 1.
+kl_weight = 1. / batch_size
 img_size = 64
 conditional = True
 # num_letters = 36
@@ -366,7 +366,8 @@ for epoch in range(n_epochs + 1):
         vae_im_loss = criterion(y, x) / x.shape[0]
         sketch_im_loss = criterion(sketch_im, x) / x.shape[0]
 
-        kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        # kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
         # loss = sketch_im_loss
         loss = vae_im_loss + (kl_loss * kl_weight) + sketch_im_loss
